@@ -29,7 +29,7 @@ void decode_line() {
     while (line_buf[head] != '\0') {
         size_t kw_len;
         size_t kwenc_len;
-        const char *kw = get_kw(line_buf + head, &kw_len, &kwenc_len);
+        const char *kw = kw_decode(line_buf + head, &kw_len, &kwenc_len);
 
         if (kw != NULL) {
             sprintf(line_buf_decoded + head_decoded, "%s ", kw);

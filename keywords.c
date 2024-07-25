@@ -8,7 +8,7 @@ Keyword keywords[] = {
     {NULL, NULL}
 };
 
-const char* get_kw(char* buf, size_t* kw_len, size_t* kwenc_len) {
+const char* kw_decode(char* buf, size_t* kw_len, size_t* kwenc_len) {
     for (size_t i = 0; keywords[i].kw != NULL; ++i) {
         Keyword *kw = &keywords[i];
         *kwenc_len = strlen(kw->enc);
