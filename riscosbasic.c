@@ -14,6 +14,7 @@ typedef enum {
     Encode
 } Mode;
 
+Mode mode = None;
 uint8_t line_buf[256];
 uint8_t line_buf_decoded[256];
 
@@ -54,33 +55,11 @@ void decode_line() {
     line_buf_decoded[head_decoded] = '\0';
 }
 
-int main(int argc, char** argv) {
-    if (argc < 2) {
-        print_usage();
-        return 1;
-    }
-
-    name = argv[0];
-
-    Mode mode = None;
-
-    if (!strcmp(argv[1], "--decode") || !strcmp(argv[1], "-d")) {
-        mode = Decode;
-    } else if (!strcmp(argv[1], "--decode-nonumber") || !strcmp(argv[1], "-D")) {
-        mode = DecodeNoNumber;
-    } else if (!strcmp(argv[1], "--encode") || !strcmp(argv[1], "-e")) {
-        mode = Encode;
-    }
-
-    if (mode == None) {
-        print_usage();
-        return 1;
-    }
-
-    FILE *f = fopen(argv[2], "r");
+int decode(const char* filename) {
+    FILE *f = fopen(filename, "r");
 
     if (!f) {
-        fprintf(stderr, "Unable to open file %s\n", argv[1]);
+        fprintf(stderr, "Unable to open file %s\n", filename);
         return 2;
     }
 
@@ -131,6 +110,43 @@ int main(int argc, char** argv) {
         }
 
         printf("%s\n", line_buf_decoded);
+    }
+
+    return 0;
+}
+
+int encode(const char* filename) {
+    // TODO
+    return 0;
+}
+
+int main(int argc, char** argv) {
+    if (argc < 2) {
+        print_usage();
+        return 1;
+    }
+
+    name = argv[0];
+
+    if (!strcmp(argv[1], "--decode") || !strcmp(argv[1], "-d")) {
+        mode = Decode;
+    } else if (!strcmp(argv[1], "--decode-nonumber") || !strcmp(argv[1], "-D")) {
+        mode = DecodeNoNumber;
+    } else if (!strcmp(argv[1], "--encode") || !strcmp(argv[1], "-e")) {
+        mode = Encode;
+    }
+
+    switch (mode) {
+        case Decode:
+        case DecodeNoNumber:
+            return decode(argv[2]);
+            break;
+        case Encode:
+            return encode(argv[2]);
+            break;
+        case None:
+            print_usage();
+            return 1;
     }
 
     return 0;
