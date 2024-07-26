@@ -10,6 +10,7 @@ const char *name = "";
 typedef enum {
     None,
     Decode,
+    DecodeNoNumber,
     Encode
 } Mode;
 
@@ -18,8 +19,8 @@ uint8_t line_buf_decoded[256];
 
 void print_usage() {
     fprintf(stderr, "Usage:\n");
-    fprintf(stderr, "%s <--encode | --decode> <FILE>\n", name);
-    fprintf(stderr, "%s <-e | -d> <FILE>\n", name);
+    fprintf(stderr, "%s <--encode | --decode | --decode-nonumber> <FILE>\n", name);
+    fprintf(stderr, "%s <-e | -d | -D> <FILE>\n", name);
 }
 
 void decode_line() {
@@ -65,6 +66,8 @@ int main(int argc, char** argv) {
 
     if (!strcmp(argv[1], "--decode") || !strcmp(argv[1], "-d")) {
         mode = Decode;
+    } else if (!strcmp(argv[1], "--decode-nonumber") || !strcmp(argv[1], "-D")) {
+        mode = DecodeNoNumber;
     } else if (!strcmp(argv[1], "--encode") || !strcmp(argv[1], "-e")) {
         mode = Encode;
     }
@@ -80,6 +83,8 @@ int main(int argc, char** argv) {
         fprintf(stderr, "Unable to open file %s\n", argv[1]);
         return 2;
     }
+
+    uint32_t line_number_expected = 10;
 
     while (!feof(f)) {
         uint8_t c = fgetc(f);
@@ -107,6 +112,13 @@ int main(int argc, char** argv) {
 
         uint16_t line_number = (line_high << 8) + line_low;
 
+        if (mode == DecodeNoNumber && line_number != line_number_expected) {
+            fprintf(stderr, "--decode-nonumber only works if lines are sequential 10s\n");
+            return(4);
+        }
+
+        line_number_expected += 10;
+
         uint8_t line_len = fgetc(f) - 3;
 
         fgets(line_buf, line_len, f);
@@ -114,7 +126,11 @@ int main(int argc, char** argv) {
 
         decode_line();
 
-        printf("%d %s\n", line_number, line_buf_decoded);
+        if (!(mode == DecodeNoNumber)) {
+            printf("%d ", line_number);
+        }
+
+        printf("%s\n", line_buf_decoded);
     }
 
     return 0;
