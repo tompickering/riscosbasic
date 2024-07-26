@@ -32,9 +32,9 @@ void decode_line() {
         const char *kw = kw_decode(line_buf + head, &kw_len, &kwenc_len);
 
         if (kw != NULL) {
-            sprintf(line_buf_decoded + head_decoded, "%s ", kw);
+            sprintf(line_buf_decoded + head_decoded, "%s", kw);
             head += kwenc_len;
-            head_decoded += kw_len + 1;
+            head_decoded += kw_len;
             continue;
         }
 

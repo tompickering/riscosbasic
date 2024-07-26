@@ -4,7 +4,7 @@ typedef struct {
 } Keyword;
 
 Keyword keywords[] = {
-    {"PRINT", "\xF1\x20"},
+    {"PRINT", "\xF1"},
     {NULL, NULL}
 };
 
