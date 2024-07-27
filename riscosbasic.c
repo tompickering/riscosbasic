@@ -1,9 +1,13 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <stdint.h>
 #include <stdbool.h>
 #include <string.h>
 
 #include "keywords.c"
+
+#define MAX_LINE_LEN 255
+#define MAX_LINE_NUMBER_LEN 15
 
 const char *name = "";
 
@@ -15,8 +19,9 @@ typedef enum {
 } Mode;
 
 Mode mode = None;
-uint8_t line_buf[256];
-uint8_t line_buf_decoded[256];
+uint8_t line_buf[MAX_LINE_LEN + 1];
+uint8_t line_buf_decoded[MAX_LINE_LEN + 1];
+uint8_t line_buf_encoded[MAX_LINE_LEN + 5];
 
 void print_usage() {
     fprintf(stderr, "Usage:\n");
@@ -115,8 +120,87 @@ int decode(const char* filename) {
     return 0;
 }
 
+size_t encode_line(uint32_t line_num) {
+    line_buf_encoded[0] = '\r';
+    line_buf_encoded[1] = (uint8_t)(line_num >> 8);
+    line_buf_encoded[2] = (uint8_t)(line_num & 0xFF);
+    line_buf_encoded[3] = strnlen(line_buf, MAX_LINE_LEN);
+    // TODO: Keyword tokenisation
+    return 4 + snprintf(line_buf_encoded + 4, MAX_LINE_LEN, line_buf);
+}
+
 int encode(const char* filename) {
-    // TODO
+    FILE *f = fopen(filename, "r");
+
+    if (!f) {
+        fprintf(stderr, "Unable to open file %s\n", filename);
+        return 2;
+    }
+
+    char line_number[MAX_LINE_NUMBER_LEN + 1];
+    bool autonum = false;
+    uint32_t line_number_in = 0;
+    size_t line_head;
+
+    while (!feof(f)) {
+        line_head = 0;
+        ++line_number_in;
+
+        uint8_t line_number_head = 0;
+
+        uint8_t c = fgetc(f);
+
+        while (c == '\r' || c == '\n') {
+            c = fgetc(f);
+        }
+
+        if (!autonum) {
+            while (c >= '0' && c <= '9') {
+                line_number[line_number_head++] = c;
+                if (line_number_head >= MAX_LINE_NUMBER_LEN) {
+                    line_number[line_number_head] = '\0';
+                    fprintf(stderr, "Line number too long (%s...)\n", line_number);
+                }
+                c = fgetc(f);
+            }
+        }
+
+        line_number[line_number_head] = '\0';
+
+        if (!autonum && line_number_head == 0) {
+            if (line_number_in == 1) {
+                autonum = true;
+            } else {
+                if (feof(f)) {
+                    return 0;
+                }
+                fprintf(stderr, "No number at line %d\n", line_number_in);
+                return 4;
+            }
+        }
+
+        if (autonum) {
+            snprintf(line_number, MAX_LINE_NUMBER_LEN, "%d", line_number_in * 10);
+        }
+
+        while (c != '\r' && c != '\n' && !feof(f)) {
+            line_buf[line_head++] = c;
+            if (line_head > MAX_LINE_LEN) {
+                fprintf(stderr, "Line too long at %d", line_number_in);
+                return 5;
+            }
+            c = fgetc(f);
+        }
+
+        line_buf[line_head] = '\0';
+
+        uint32_t line_number_int = atoi(line_number);
+        size_t len = encode_line(line_number_int);
+        for (size_t i = 0; i < len; ++i) {
+            fputc(line_buf_encoded[i], stdout);
+        }
+    }
+
     return 0;
 }
 
@@ -149,5 +233,6 @@ int main(int argc, char** argv) {
             return 1;
     }
 
+    fflush(stdout);
     return 0;
 }
