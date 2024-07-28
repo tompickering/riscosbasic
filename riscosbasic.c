@@ -126,7 +126,6 @@ size_t encode_line(uint32_t line_num) {
     line_buf_encoded[0] = '\r';
     line_buf_encoded[1] = (uint8_t)(line_num >> 8);
     line_buf_encoded[2] = (uint8_t)(line_num & 0xFF);
-    line_buf_encoded[3] = strnlen(line_buf, MAX_LINE_LEN);
     size_t len = 0;
     uint8_t kw[16];
     for (size_t i = 0; line_buf[i] != '\0';) {
@@ -157,8 +156,15 @@ size_t encode_line(uint32_t line_num) {
         }
 
         line_buf_encoded[4+len++] = line_buf[i++];
+
+        if (4+len >= MAX_LINE_LEN) {
+            fprintf(stderr, "Line too long: %d\n", line_num);
+        }
     }
-    return 4 + len;
+
+    size_t encoded_line_len = 4 + len;
+    line_buf_encoded[3] = encoded_line_len;
+    return encoded_line_len;
 }
 
 int encode(const char* filename) {
