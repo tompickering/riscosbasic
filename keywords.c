@@ -193,3 +193,14 @@ const char* kw_decode(char* buf, size_t* kw_len, size_t* kwenc_len) {
 
     return NULL;
 }
+
+const char* kw_encode(char* buf) {
+    for (size_t i = 0; keywords[i].kw != NULL; ++i) {
+        Keyword *kw = &keywords[i];
+        if (!strcmp(buf, kw->kw)) {
+            return kw->enc;
+        }
+    }
+
+    return NULL;
+}

@@ -125,8 +125,38 @@ size_t encode_line(uint32_t line_num) {
     line_buf_encoded[1] = (uint8_t)(line_num >> 8);
     line_buf_encoded[2] = (uint8_t)(line_num & 0xFF);
     line_buf_encoded[3] = strnlen(line_buf, MAX_LINE_LEN);
-    // TODO: Keyword tokenisation
-    return 4 + snprintf(line_buf_encoded + 4, MAX_LINE_LEN, line_buf);
+    size_t len = 0;
+    uint8_t kw[16];
+    for (size_t i = 0; line_buf[i] != '\0';) {
+        size_t kwlen = 0;
+        size_t off = 0;
+        uint8_t kw_c = line_buf[i+off];
+        while (kw_c >= 'A' && kw_c <= 'Z') {
+            kw[kwlen++] = kw_c;
+            ++off;
+            kw_c = line_buf[i+off];
+        }
+
+        kw[kwlen] = '\0';
+
+        if (kwlen > 0) {
+            const char* enc = kw_encode(kw);
+            if (enc != NULL) {
+                size_t enclen = strlen(enc);
+                size_t chars = snprintf(&line_buf_encoded[4+len], enclen+1, enc);
+                len += chars;
+                i += kwlen;
+            } else {
+                size_t chars = snprintf(&line_buf_encoded[4+len], kwlen+1, kw);
+                len += chars;
+                i += chars;
+            }
+            continue;
+        }
+
+        line_buf_encoded[4+len++] = line_buf[i++];
+    }
+    return 4 + len;
 }
 
 int encode(const char* filename) {
@@ -172,7 +202,7 @@ int encode(const char* filename) {
                 autonum = true;
             } else {
                 if (feof(f)) {
-                    return 0;
+                    break;
                 }
                 fprintf(stderr, "No number at line %d\n", line_number_in);
                 return 4;
@@ -181,6 +211,11 @@ int encode(const char* filename) {
 
         if (autonum) {
             snprintf(line_number, MAX_LINE_NUMBER_LEN, "%d", line_number_in * 10);
+        }
+
+        // Don't consider the first whitespace after the line number, if present
+        if (!autonum && (c == ' ' || c == '\t')) {
+            c = fgetc(f);
         }
 
         while (c != '\r' && c != '\n' && !feof(f)) {
@@ -200,6 +235,10 @@ int encode(const char* filename) {
             fputc(line_buf_encoded[i], stdout);
         }
     }
+
+    fputc('\x0D', stdout);
+    fputc('\xFF', stdout);
+    fclose(f);
 
     return 0;
 }
