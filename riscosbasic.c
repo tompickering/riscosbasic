@@ -34,8 +34,10 @@ typedef enum {
 
 void print_usage() {
     fprintf(stderr, "Usage:\n");
-    fprintf(stderr, "%s <--encode | --decode | --decode-nonumber> <FILE>\n", name);
-    fprintf(stderr, "%s <-e | -d | -D> <FILE>\n", name);
+    fprintf(stderr, "%s <--encode | --decode | --decode-nonumber> [FILE]\n", name);
+    fprintf(stderr, "%s <-e | -d | -D> [FILE]\n", name);
+    fprintf(stderr, "\n");
+    fprintf(stderr, "If FILE is not supplied, will read from stdin\n");
 }
 
 void decode_line() {
@@ -60,14 +62,7 @@ void decode_line() {
     line_buf_decoded[head_decoded] = '\0';
 }
 
-int decode(const char* filename) {
-    FILE *f = fopen(filename, "r");
-
-    if (!f) {
-        fprintf(stderr, "Unable to open file %s\n", filename);
-        return ERR_FOPEN;
-    }
-
+int decode(FILE* f) {
     uint32_t line_number_expected = 10;
 
     while (!feof(f)) {
@@ -117,8 +112,6 @@ int decode(const char* filename) {
         printf("%s\n", line_buf_decoded);
     }
 
-    fclose(f);
-
     return 0;
 }
 
@@ -167,14 +160,7 @@ size_t encode_line(uint32_t line_num) {
     return encoded_line_len;
 }
 
-int encode(const char* filename) {
-    FILE *f = fopen(filename, "r");
-
-    if (!f) {
-        fprintf(stderr, "Unable to open file %s\n", filename);
-        return ERR_FOPEN;
-    }
-
+int encode(FILE* f) {
     char line_number[MAX_LINE_NUMBER_LEN + 1];
     bool autonum = false;
     uint32_t line_number_in = 0;
@@ -250,7 +236,6 @@ int encode(const char* filename) {
 
     fputc('\x0D', stdout);
     fputc('\xFF', stdout);
-    fclose(f);
 
     return 0;
 }
@@ -271,19 +256,30 @@ int main(int argc, char** argv) {
         mode = Encode;
     }
 
+    FILE *infile = stdin;
+
+    if (argc >= 3) {
+        infile = fopen(argv[2], "r");
+        if (!infile) {
+            fprintf(stderr, "Unable to open file %s\n", argv[2]);
+            return ERR_FOPEN;
+        }
+    }
+
     switch (mode) {
         case Decode:
         case DecodeNoNumber:
-            return decode(argv[2]);
+            return decode(infile);
             break;
         case Encode:
-            return encode(argv[2]);
+            return encode(infile);
             break;
         case None:
             print_usage();
             return ERR_USAGE;
     }
 
+    fclose(infile);
     fflush(stdout);
     return 0;
 }
