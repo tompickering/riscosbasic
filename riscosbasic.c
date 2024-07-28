@@ -23,6 +23,15 @@ uint8_t line_buf[MAX_LINE_LEN + 1];
 uint8_t line_buf_decoded[MAX_LINE_LEN + 1];
 uint8_t line_buf_encoded[MAX_LINE_LEN + 5];
 
+typedef enum {
+    ERR_NONE,
+    ERR_USAGE,
+    ERR_FOPEN,
+    ERR_FORMAT,
+    ERR_MISSINGNUMBER,
+    ERR_LONGLINE
+} Error;
+
 void print_usage() {
     fprintf(stderr, "Usage:\n");
     fprintf(stderr, "%s <--encode | --decode | --decode-nonumber> <FILE>\n", name);
@@ -65,7 +74,7 @@ int decode(const char* filename) {
 
     if (!f) {
         fprintf(stderr, "Unable to open file %s\n", filename);
-        return 2;
+        return ERR_FOPEN;
     }
 
     uint32_t line_number_expected = 10;
@@ -75,7 +84,7 @@ int decode(const char* filename) {
 
         if (c != '\r') {
             fprintf(stderr, "Line began with %X (expected %X)\n", c, '\r');
-            return 3;
+            return ERR_FORMAT;
         }
 
         if (feof(f)) {
@@ -172,7 +181,7 @@ int encode(const char* filename) {
 
     if (!f) {
         fprintf(stderr, "Unable to open file %s\n", filename);
-        return 2;
+        return ERR_FOPEN;
     }
 
     char line_number[MAX_LINE_NUMBER_LEN + 1];
@@ -217,7 +226,7 @@ int encode(const char* filename) {
                     break;
                 }
                 fprintf(stderr, "No number at line %d\n", line_number_in);
-                return 4;
+                return ERR_MISSINGNUMBER;
             }
         }
 
@@ -234,7 +243,7 @@ int encode(const char* filename) {
             line_buf[line_head++] = c;
             if (line_head > MAX_LINE_LEN) {
                 fprintf(stderr, "Line too long at %d", line_number_in);
-                return 5;
+                return ERR_LONGLINE;
             }
             c = fgetc(f);
         }
@@ -258,7 +267,7 @@ int encode(const char* filename) {
 int main(int argc, char** argv) {
     if (argc < 2) {
         print_usage();
-        return 1;
+        return ERR_USAGE;
     }
 
     name = argv[0];
@@ -281,7 +290,7 @@ int main(int argc, char** argv) {
             break;
         case None:
             print_usage();
-            return 1;
+            return ERR_USAGE;
     }
 
     fflush(stdout);
