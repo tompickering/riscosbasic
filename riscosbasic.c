@@ -54,15 +54,6 @@ void decode_line() {
             continue;
         }
 
-        /*
-        if (!strncmp(line_buf + head, "\xF1\x20", 2)) {
-            sprintf(line_buf_decoded + head_decoded, "PRINT ");
-            head += 2;
-            head_decoded += 6;
-            continue;
-        }
-        */
-
         line_buf_decoded[head_decoded++] = line_buf[head++];
     }
 
