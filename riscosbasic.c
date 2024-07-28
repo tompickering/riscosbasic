@@ -188,6 +188,10 @@ int encode(const char* filename) {
 
         uint8_t c = fgetc(f);
 
+        if (feof(f)) {
+            break;
+        }
+
         while (c == '\r' || c == '\n') {
             c = fgetc(f);
         }
