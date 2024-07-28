@@ -4,12 +4,12 @@ Small tool to convert RISC OS' tokenised BASIC format (&FFB) to and from plain t
 
 E.g.
 
-$ riscosbasic --decode ~/arculator/hostfs/BASICFile,ffb
-10 PRINT "Hello"
-20 PRINT "World"
-30 
-40 FOR x% = 1 TO 3
-50 PRINT "!"
+$ riscosbasic --decode ~/arculator/hostfs/BASICFile,ffb<br/>
+10 PRINT "Hello"<br/>
+20 PRINT "World"<br/>
+30 <br/>
+40 FOR x% = 1 TO 3<br/>
+50 PRINT "!"<br/>
 60 NEXT x%
 
 $ echo '10 PRINT "Example"\n20PRINT"Encoding"' | riscosbasic --encode > ~/arculator/hostfs/BASICFile2,ffb
