@@ -4,6 +4,8 @@ NAME=riscosbasic
 
 CFLAGS=-Wall
 
+PREFIX=/usr/local
+
 all: riscosbasic
 
 riscosbasic: riscosbasic.c keywords
