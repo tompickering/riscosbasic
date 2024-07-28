@@ -117,6 +117,8 @@ int decode(const char* filename) {
         printf("%s\n", line_buf_decoded);
     }
 
+    fclose(f);
+
     return 0;
 }
 
