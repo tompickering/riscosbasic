@@ -50,7 +50,7 @@ void decode_line() {
         const char *kw = kw_decode(line_buf + head, &kw_len, &kwenc_len);
 
         if (kw != NULL) {
-            sprintf(line_buf_decoded + head_decoded, "%s", kw);
+            sprintf((char*)(line_buf_decoded + head_decoded), "%s", kw);
             head += kwenc_len;
             head_decoded += kw_len;
             continue;
@@ -100,7 +100,7 @@ int decode(FILE* f) {
 
         uint8_t line_len = fgetc(f) - 3;
 
-        fgets(line_buf, line_len, f);
+        fgets((char*)line_buf, line_len, f);
         line_buf[line_len] = '\0';
 
         decode_line();
@@ -137,11 +137,11 @@ size_t encode_line(uint32_t line_num) {
             const char* enc = kw_encode(kw);
             if (enc != NULL) {
                 size_t enclen = strlen(enc);
-                size_t chars = snprintf(&line_buf_encoded[4+len], enclen+1, enc);
+                size_t chars = snprintf((char*)&line_buf_encoded[4+len], enclen+1, enc);
                 len += chars;
                 i += kwlen;
             } else {
-                size_t chars = snprintf(&line_buf_encoded[4+len], kwlen+1, kw);
+                size_t chars = snprintf((char*)&line_buf_encoded[4+len], kwlen+1, (char*)kw);
                 len += chars;
                 i += chars;
             }

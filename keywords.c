@@ -181,11 +181,11 @@ Keyword keywords[] = {
     {NULL, NULL}
 };
 
-const char* kw_decode(char* buf, size_t* kw_len, size_t* kwenc_len) {
+const char* kw_decode(uint8_t* buf, size_t* kw_len, size_t* kwenc_len) {
     for (size_t i = 0; keywords[i].kw != NULL; ++i) {
         Keyword *kw = &keywords[i];
         *kwenc_len = strlen(kw->enc);
-        if (!strncmp(buf, kw->enc, *kwenc_len)) {
+        if (!strncmp((const char*)buf, kw->enc, *kwenc_len)) {
             *kw_len = strlen(kw->kw);
             return kw->kw;
         }
@@ -194,10 +194,10 @@ const char* kw_decode(char* buf, size_t* kw_len, size_t* kwenc_len) {
     return NULL;
 }
 
-const char* kw_encode(char* buf) {
+const char* kw_encode(uint8_t* buf) {
     for (size_t i = 0; keywords[i].kw != NULL; ++i) {
         Keyword *kw = &keywords[i];
-        if (!strcmp(buf, kw->kw)) {
+        if (!strcmp((const char*)buf, kw->kw)) {
             return kw->enc;
         }
     }

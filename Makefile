@@ -2,6 +2,8 @@ NAME=riscosbasic
 
 .PHONY: clean all debug install
 
+CFLAGS=-Wall
+
 all: riscosbasic
 
 riscosbasic: riscosbasic.c keywords
