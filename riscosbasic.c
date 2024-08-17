@@ -121,14 +121,20 @@ size_t encode_line(uint32_t line_num) {
     line_buf_encoded[2] = (uint8_t)(line_num & 0xFF);
     size_t len = 0;
     uint8_t kw[16];
+
+    bool starcommand = line_buf[0] == '*';
+
     for (size_t i = 0; line_buf[i] != '\0';) {
         size_t kwlen = 0;
         size_t off = 0;
-        uint8_t kw_c = line_buf[i+off];
-        while (kw_c >= 'A' && kw_c <= 'Z') {
-            kw[kwlen++] = kw_c;
-            ++off;
-            kw_c = line_buf[i+off];
+
+        if (!starcommand) {
+            uint8_t kw_c = line_buf[i+off];
+            while (kw_c >= 'A' && kw_c <= 'Z') {
+                kw[kwlen++] = kw_c;
+                ++off;
+                kw_c = line_buf[i+off];
+            }
         }
 
         kw[kwlen] = '\0';
