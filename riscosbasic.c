@@ -133,19 +133,19 @@ size_t encode_line(uint32_t line_num) {
 
         kw[kwlen] = '\0';
 
-        if (kwlen > 0) {
+        while (kwlen > 0) {
             const char* enc = kw_encode(kw);
             if (enc != NULL) {
                 size_t enclen = strlen(enc);
                 size_t chars = snprintf((char*)&line_buf_encoded[4+len], enclen+1, enc);
                 len += chars;
                 i += kwlen;
-            } else {
-                size_t chars = snprintf((char*)&line_buf_encoded[4+len], kwlen+1, (char*)kw);
-                len += chars;
-                i += chars;
+                goto do_continue;
             }
-            continue;
+
+            --kwlen;
+            --off;
+            kw[kwlen] = '\0';
         }
 
         line_buf_encoded[4+len++] = line_buf[i++];
@@ -153,6 +153,8 @@ size_t encode_line(uint32_t line_num) {
         if (4+len >= MAX_LINE_LEN) {
             fprintf(stderr, "Line too long: %d\n", line_num);
         }
+
+do_continue:
     }
 
     size_t encoded_line_len = 4 + len;
